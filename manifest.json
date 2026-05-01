@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Ron Cookie Vault Pro",
-  "version": "1.0.0",
-  "description": "Advanced multi-account cookie manager with IndexedDB storage & responsive design",
+  "version": "2.0.0",
+  "description": "Multi-account cookie manager with cloud sync",
   "permissions": [
     "cookies",
     "storage",
