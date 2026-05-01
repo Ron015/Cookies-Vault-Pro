@@ -45,7 +45,7 @@ Perfect for:
 ## ⚙️ Installation
 
 1. Clone repo:
-   git clone https://github.com/ron015/cookie-vault-pro.git
+   git clone https://github.com/ron015/cookies-vault-pro.git
 
 2. Open Chrome:
    chrome://extensions/
