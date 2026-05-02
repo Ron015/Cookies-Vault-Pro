@@ -15,7 +15,6 @@
             request.onupgradeneeded = (event) => {
                 const database = event.target.result;
                 
-                // Version 1 stores
                 if (!database.objectStoreNames.contains(PROFILES_STORE)) {
                     const profilesStore = database.createObjectStore(PROFILES_STORE, { keyPath: 'id' });
                     profilesStore.createIndex('domain', 'domain', { unique: false });
@@ -24,7 +23,6 @@
                     profilesStore.createIndex('updated', 'updated', { unique: false });
                 }
                 
-                // Version 2: Add storageType index
                 if (event.oldVersion < 2) {
                     const tx = event.target.transaction;
                     const store = tx.objectStore(PROFILES_STORE);
@@ -85,7 +83,7 @@
     let firebaseDB = null;
     let firebaseAuth = null;
     let cloudConnected = false;
-    let currentStorageMode = 'local'; // 'local', 'cloud', 'hybrid'
+    let currentStorageMode = 'local';
 
     const CloudStorage = {
         async initialize(config) {
@@ -94,7 +92,6 @@
                     throw new Error('Firebase SDK not loaded');
                 }
 
-                // Initialize Firebase
                 if (!firebase.apps.length) {
                     firebaseApp = firebase.initializeApp({
                         apiKey: config.apiKey,
@@ -109,7 +106,7 @@
                 
                 firebaseAuth = firebase.auth();
                 firebaseDB = firebase.database();
-                // Authenticate
+                
                 if (config.email && config.password) {
                     await firebaseAuth.signInWithEmailAndPassword(config.email, config.password);
                 }
@@ -202,58 +199,44 @@
         storageMode: 'local'
     };
     let firebaseConfig = null;
+    let confirmCallback = null;
+    let profileFormMode = 'add';
+    let editProfileId = null;
 
-    // ============ DOM ============
+    // ============ DOM ELEMENTS (UPDATED FOR NEW UI) ============
     const $ = (sel) => document.querySelector(sel);
     const dom = {
-        // Existing DOM elements
-        switchDropdown: $('#switchDropdown'),
-        applySwitchBtn: $('#applySwitchBtn'),
-        captureCurrentBtn: $('#captureCurrentBtn'),
+        // Sidebar
+        sidebarProfileCount: $('#sidebarProfileCount'),
+        sidebarActiveProfile: $('#sidebarActiveProfile'),
+        sidebarCloudStatus: $('#sidebarCloudStatus'),
+        sidebarDomain: $('#sidebarDomain'),
+        
+        // Top bar
+        cloudStatusDot: $('#cloudStatusDot'),
+        cloudStatusText: $('#cloudStatusText'),
+        currentDomainBadge: $('#currentDomainBadge'),
+        
+        // Panels
+        dashboardPanel: $('#dashboardPanel'),
+        cloudPanel: $('#cloudPanel'),
+        toolsPanel: $('#toolsPanel'),
+        settingsPanel: $('#settingsPanel'),
+        
+        // Profiles
+        profilesGrid: $('#profilesGrid'),
+        searchInput: $('#searchInput'),
+        clearSearchBtn: $('#clearSearchBtn'),
         showDomainBtn: $('#showDomainBtn'),
         showGlobalBtn: $('#showGlobalBtn'),
         addProfileBtn: $('#addProfileBtn'),
         addCloudProfileBtn: $('#addCloudProfileBtn'),
-        clearDomainBtn: $('#clearDomainBtn'),
-        cleanupBtn: $('#cleanupBtn'),
-        exportBtn: $('#exportBtn'),
-        importBtn: $('#importBtn'),
-        hiddenFileInput: $('#hiddenFileInput'),
-        profilesListContainer: $('#profilesListContainer'),
-        viewTitle: $('#viewTitle'),
-        activeProfileName: $('#activeProfileName'),
-        activeStorageMode: $('#activeStorageMode'),
-        currentDomainBadge: $('#currentDomainBadge'),
-        totalProfilesBadge: $('#totalProfilesBadge'),
-        cloudSyncBadge: $('#cloudSyncBadge'),
-        searchInput: $('#searchInput'),
-        clearSearchBtn: $('#clearSearchBtn'),
-        statusToast: $('#statusToast'),
-        confirmModal: $('#confirmModal'),
-        confirmTitle: $('#confirmTitle'),
-        confirmIcon: $('#confirmIcon'),
-        confirmMessage: $('#confirmMessage'),
-        confirmActionBtn: $('#confirmActionBtn'),
-        profileFormModal: $('#profileFormModal'),
-        formModalTitle: $('#formModalTitle'),
-        profileNameInput: $('#profileNameInput'),
-        profileDomainInput: $('#profileDomainInput'),
-        profileTagsInput: $('#profileTagsInput'),
-        profileStorageSelect: $('#profileStorageSelect'),
-        cookieDataInput: $('#cookieDataInput'),
-        formModalFooter: $('#formModalFooter'),
         
-        // Cloud DOM elements
-        cloudSettingsSection: $('#cloudSettingsSection'),
-        cloudStatus: $('#cloudStatus'),
-        cloudStatusText: $('#cloudStatusText'),
-        configureCloudBtn: $('#configureCloudBtn'),
+        // Cloud
+        syncNowBtn: $('#syncNowBtn'),
         localModeBtn: $('#localModeBtn'),
         cloudModeBtn: $('#cloudModeBtn'),
         hybridModeBtn: $('#hybridModeBtn'),
-        syncNowBtn: $('#syncNowBtn'),
-        cloudSettingsBtn: $('#cloudSettingsBtn'),
-        firebaseConfigModal: $('#firebaseConfigModal'),
         firebaseApiKey: $('#firebaseApiKey'),
         firebaseProjectId: $('#firebaseProjectId'),
         firebaseAuthDomain: $('#firebaseAuthDomain'),
@@ -262,12 +245,42 @@
         firebaseEmail: $('#firebaseEmail'),
         firebasePassword: $('#firebasePassword'),
         saveFirebaseConfigBtn: $('#saveFirebaseConfigBtn'),
-        clearFirebaseConfigBtn: $('#clearFirebaseConfigBtn')
+        clearFirebaseConfigBtn: $('#clearFirebaseConfigBtn'),
+        
+        // Tools
+        exportBtn: $('#exportBtn'),
+        importBtn: $('#importBtn'),
+        hiddenFileInput: $('#hiddenFileInput'),
+        
+        // Settings
+        autoReloadCheckbox: $('#autoReloadCheckbox'),
+        compressionCheckbox: $('#compressionCheckbox'),
+        cleanupSettingsBtn: $('#cleanupSettingsBtn'),
+        
+        // Quick actions (sidebar)
+        captureCurrentBtn: $('#captureCurrentBtn'),
+        clearDomainBtn: $('#clearDomainBtn'),
+        cleanupBtn: $('#cleanupBtn'),
+        
+        // Modals
+        profileFormModal: $('#profileFormModal'),
+        formModalTitle: $('#formModalTitle'),
+        profileNameInput: $('#profileNameInput'),
+        profileDomainInput: $('#profileDomainInput'),
+        profileTagsInput: $('#profileTagsInput'),
+        profileStorageSelect: $('#profileStorageSelect'),
+        cookieDataInput: $('#cookieDataInput'),
+        formModalFooter: $('#formModalFooter'),
+        saveProfileBtn: $('#saveProfileBtn'),
+        
+        confirmModal: $('#confirmModal'),
+        confirmTitle: $('#confirmTitle'),
+        confirmMessage: $('#confirmMessage'),
+        confirmActionBtn: $('#confirmActionBtn'),
+        captureDashboardBtn: $('#captureDashboardBtn'),
+        // Toast
+        statusToast: $('#statusToast')
     };
-
-    let confirmCallback = null;
-    let profileFormMode = 'add';
-    let editProfileId = null;
 
     // ============ COMPRESSION ============
     const Compressor = {
@@ -307,18 +320,61 @@
         return false;
     }
 
+    // ============ UI HELPERS ============
+    function showToast(message, type = 'success') {
+        dom.statusToast.textContent = message;
+        dom.statusToast.className = 'toast ' + type;
+        dom.statusToast.classList.add('show');
+        setTimeout(() => dom.statusToast.classList.remove('show'), 3000);
+    }
+
+    function escapeHtml(s) { 
+        return String(s || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); 
+    }
+
+    function updateSidebarStats(profiles) {
+        dom.sidebarProfileCount.textContent = profiles.length;
+        const active = profiles.find(p => p.id === currentProfileId);
+        dom.sidebarActiveProfile.textContent = active ? active.name : 'none';
+        dom.sidebarCloudStatus.textContent = cloudConnected ? '🟢 Connected' : '⬤ Off';
+        dom.sidebarDomain.textContent = currentTabDomain || '...';
+    }
+
+    function updateCloudStatusUI() {
+        if (cloudConnected) {
+            dom.cloudStatusDot.className = 'status-dot connected';
+            dom.cloudStatusText.textContent = '☁️ Connected to Firebase';
+            dom.sidebarCloudStatus.textContent = '🟢 Connected';
+        } else {
+            dom.cloudStatusDot.className = 'status-dot disconnected';
+            dom.cloudStatusText.textContent = '☁️ Not connected';
+            dom.sidebarCloudStatus.textContent = '⬤ Off';
+        }
+
+        // Update storage mode buttons
+        dom.localModeBtn.classList.toggle('active', currentStorageMode === 'local');
+        dom.cloudModeBtn.classList.toggle('active', currentStorageMode === 'cloud');
+        dom.hybridModeBtn.classList.toggle('active', currentStorageMode === 'hybrid');
+
+        // Show/hide add buttons based on mode
+        dom.addProfileBtn.style.display = currentStorageMode === 'cloud' ? 'none' : '';
+        dom.addCloudProfileBtn.style.display = currentStorageMode === 'local' ? 'none' : '';
+    }
+
     // ============ MODALS ============
-    function showConfirmModal(title, message, icon, callback, confirmText = 'Confirm', isDanger = false) {
+    function showConfirmModal(title, message, callback, confirmText = 'Confirm', isDanger = false) {
         dom.confirmTitle.textContent = title;
-        dom.confirmIcon.textContent = icon;
         dom.confirmMessage.innerHTML = message;
         confirmCallback = callback;
         dom.confirmActionBtn.textContent = confirmText;
-        dom.confirmActionBtn.className = isDanger ? 'btn btn-delete' : 'btn btn-confirm';
+        dom.confirmActionBtn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
         dom.confirmModal.classList.add('active');
     }
 
-    function hideConfirmModal() { dom.confirmModal.classList.remove('active'); confirmCallback = null; }
+    function hideConfirmModal() { 
+        dom.confirmModal.classList.remove('active'); 
+        confirmCallback = null; 
+    }
 
     function showProfileFormModal(mode = 'add', profileData = null, defaultStorage = 'local') {
         profileFormMode = mode;
@@ -332,8 +388,8 @@
             dom.profileTagsInput.value = '';
             dom.cookieDataInput.value = '';
             dom.formModalFooter.innerHTML = `
-                <button class="btn btn-cancel" data-close="profileFormModal">Cancel</button>
-                <button class="btn btn-confirm" id="saveProfileBtn">Save</button>`;
+                <button class="btn btn-secondary" data-close="profileFormModal">Cancel</button>
+                <button class="btn btn-primary" id="saveProfileBtn">Save</button>`;
         } else if (mode === 'edit' && profileData) {
             editProfileId = profileData.id;
             dom.formModalTitle.textContent = 'Edit Profile';
@@ -343,9 +399,9 @@
             dom.profileStorageSelect.value = profileData.storageType || 'local';
             dom.cookieDataInput.value = JSON.stringify(Compressor.decompress(profileData.cookieData) || '', null, 2);
             dom.formModalFooter.innerHTML = `
-                <button class="btn btn-delete" id="deleteProfileBtn">Delete</button>
-                <button class="btn btn-cancel" data-close="profileFormModal">Cancel</button>
-                <button class="btn btn-confirm" id="saveProfileBtn">Update</button>`;
+                <button class="btn btn-danger" id="deleteProfileBtn">Delete</button>
+                <button class="btn btn-secondary" data-close="profileFormModal">Cancel</button>
+                <button class="btn btn-primary" id="saveProfileBtn">Update</button>`;
         }
         dom.profileFormModal.classList.add('active');
     }
@@ -355,150 +411,7 @@
         editProfileId = null;
     }
 
-    function showFirebaseConfigModal() {
-        if (firebaseConfig) {
-            dom.firebaseApiKey.value = firebaseConfig.apiKey || '';
-            dom.firebaseProjectId.value = firebaseConfig.projectId || '';
-            dom.firebaseAuthDomain.value = firebaseConfig.authDomain || '';
-            dom.firebaseDatabaseURL.value = firebaseConfig.databaseURL || '';
-            dom.firebaseAppId.value = firebaseConfig.appId || '';
-            dom.firebaseEmail.value = firebaseConfig.email || '';
-            dom.firebasePassword.value = firebaseConfig.password || '';
-        }
-        dom.firebaseConfigModal.classList.add('active');
-    }
-
-    function hideFirebaseConfigModal() {
-        dom.firebaseConfigModal.classList.remove('active');
-    }
-
-    function showToast(message, type = 'success') {
-        dom.statusToast.textContent = message;
-        dom.statusToast.className = 'toast ' + type;
-        dom.statusToast.classList.add('show');
-        setTimeout(() => dom.statusToast.classList.remove('show'), 3000);
-    }
-
-    // ============ CLOUD MANAGEMENT ============
-    async function connectToFirebase(config) {
-        try {
-            await CloudStorage.initialize(config);
-            
-            // Save config to local storage (encrypted in production)
-            firebaseConfig = config;
-            await dbPut(SETTINGS_STORE, { 
-                key: 'firebaseConfig', 
-                value: config 
-            });
-            
-            updateCloudUI();
-            showToast('☁️ Connected to Firebase!', 'success');
-            return true;
-        } catch (error) {
-            showToast('Failed to connect: ' + error.message, 'error');
-            return false;
-        }
-    }
-
-    async function disconnectFirebase() {
-        await CloudStorage.disconnect();
-        firebaseConfig = null;
-        await dbDelete(SETTINGS_STORE, 'firebaseConfig');
-        cloudConnected = false;
-        updateCloudUI();
-        showToast('Disconnected from cloud', 'warning');
-    }
-
-    function updateCloudUI() {
-        dom.cloudSettingsSection.classList.add('visible');
-        
-        if (cloudConnected) {
-            dom.cloudStatus.className = 'cloud-status connected';
-            dom.cloudStatusText.textContent = '☁️ Connected to Firebase';
-            dom.configureCloudBtn.textContent = '✓ Connected';
-            dom.cloudSyncBadge.style.display = 'inline';
-        } else {
-            dom.cloudStatus.className = 'cloud-status disconnected';
-            dom.cloudStatusText.textContent = '☁️ Not connected';
-            dom.configureCloudBtn.textContent = '⚙️ Configure';
-            dom.cloudSyncBadge.style.display = 'none';
-        }
-
-        // Update storage mode buttons
-        dom.localModeBtn.classList.toggle('active', currentStorageMode === 'local');
-        dom.cloudModeBtn.classList.toggle('active', currentStorageMode === 'cloud');
-        dom.hybridModeBtn.classList.toggle('active', currentStorageMode === 'hybrid');
-
-        dom.addProfileBtn.style.display = currentStorageMode === 'cloud' ? 'none' : 'inline-flex';
-        dom.addCloudProfileBtn.style.display = currentStorageMode === 'local' ? 'none' : 'inline-flex';
-        
-        dom.activeStorageMode.textContent = 
-            currentStorageMode === 'local' ? '💾' : 
-            currentStorageMode === 'cloud' ? '☁️' : '🔄';
-    }
-
-    async function setStorageMode(mode) {
-        if (mode === 'cloud' && !cloudConnected) {
-            showToast('Please configure Firebase first', 'warning');
-            return;
-        }
-        
-        currentStorageMode = mode;
-        settings.storageMode = mode;
-        await dbPut(SETTINGS_STORE, { key: 'main', value: settings });
-        
-        // If switching to cloud/hybrid, sync data
-        if ((mode === 'cloud' || mode === 'hybrid') && cloudConnected) {
-            await syncToCloud();
-        }
-        
-        updateCloudUI();
-        updateUI();
-    }
-
-    // Sync local data to cloud
-    async function syncToCloud() {
-        if (!cloudConnected) {
-            showToast('Not connected to cloud', 'error');
-            return;
-        }
-
-        const syncIcon = dom.syncNowBtn.querySelector('.sync-indicator');
-        syncIcon.classList.add('spinning');
-        
-        try {
-            const localProfiles = await dbGetAll(PROFILES_STORE);
-            const cloudProfiles = await CloudStorage.getAllProfiles();
-            
-            let syncedCount = 0;
-            
-            // Upload local profiles to cloud
-            for (const localProfile of localProfiles) {
-                if (localProfile.storageType !== 'local') {
-                    await CloudStorage.saveProfile(localProfile);
-                    syncedCount++;
-                }
-            }
-            
-            // Download cloud profiles to local
-            for (const cloudProfile of cloudProfiles) {
-                const localExists = localProfiles.find(p => p.id === cloudProfile.id);
-                if (!localExists) {
-                    cloudProfile.storageType = cloudProfile.storageType || 'cloud';
-                    await dbPut(PROFILES_STORE, cloudProfile);
-                    syncedCount++;
-                }
-            }
-            
-            showToast(`Synced ${syncedCount} profiles`, 'success');
-        } catch (error) {
-            showToast('Sync failed: ' + error.message, 'error');
-        } finally {
-            syncIcon.classList.remove('spinning');
-        }
-    }
-
-    // ============ CORE ============
+    // ============ CORE FUNCTIONS ============
     async function getCurrentTabInfo() {
         try {
             const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -506,46 +419,41 @@
                 currentTabUrl = tabs[0].url;
                 currentTabId = tabs[0].id;
                 currentTabDomain = new URL(currentTabUrl).hostname;
-                dom.currentDomainBadge.textContent = currentTabDomain;
+                dom.currentDomainBadge.textContent = '🌐 ' + currentTabDomain;
+                dom.sidebarDomain.textContent = currentTabDomain;
                 return { url: currentTabUrl, domain: currentTabDomain, tabId: currentTabId };
             }
         } catch(e) {}
-        dom.currentDomainBadge.textContent = 'unknown';
+        dom.currentDomainBadge.textContent = '🌐 unknown';
+        dom.sidebarDomain.textContent = '...';
         return null;
     }
 
     async function getFilteredProfiles() {
         try {
             let profiles = [];
-            
-            // Get local profiles
             const localProfiles = await dbGetAll(PROFILES_STORE);
-            
-            // Get cloud profiles if connected and not local-only mode
             let cloudProfiles = [];
+            
             if (cloudConnected && currentStorageMode !== 'local') {
                 cloudProfiles = await CloudStorage.getAllProfiles();
             }
             
-            // Merge based on storage mode
             if (currentStorageMode === 'local') {
                 profiles = localProfiles;
             } else if (currentStorageMode === 'cloud') {
                 profiles = cloudProfiles;
-            } else { // hybrid
-                // Merge and deduplicate by ID (cloud takes priority)
+            } else {
                 const mergedMap = new Map();
                 localProfiles.forEach(p => mergedMap.set(p.id, p));
                 cloudProfiles.forEach(p => mergedMap.set(p.id, p));
                 profiles = Array.from(mergedMap.values());
             }
             
-            // Filter by domain
             if (currentViewMode === 'domain') {
                 profiles = profiles.filter(p => matchesDomain(p.domain, currentTabDomain));
             }
             
-            // Filter by search
             if (searchQuery) {
                 const q = searchQuery.toLowerCase();
                 profiles = profiles.filter(p =>
@@ -562,28 +470,80 @@
         }
     }
 
-    async function captureCurrentCookies() {
-        const tabInfo = await getCurrentTabInfo();
-        if (!tabInfo) { showToast('Cannot access tab', 'error'); return null; }
+    async function renderProfilesList() {
         try {
-            const cookies = await chrome.cookies.getAll({ domain: tabInfo.domain });
-            const allCookies = await chrome.cookies.getAll({ url: tabInfo.url });
-            const unique = Array.from(new Map([...cookies, ...allCookies].map(c => [c.name + c.domain + c.path, c])).values());
-            const now = Date.now() / 1000;
-            return {
-                domain: tabInfo.domain,
-                cookies: unique.filter(c => !c.expirationDate || c.expirationDate > now).map(c => ({
-                    name: c.name, value: c.value, domain: c.domain, path: c.path,
-                    secure: c.secure, httpOnly: c.httpOnly, sameSite: c.sameSite, expirationDate: c.expirationDate
-                })),
-                capturedAt: Date.now()
-            };
-        } catch(e) { showToast('Capture failed', 'error'); return null; }
+            const filtered = await getFilteredProfiles();
+            const allProfiles = await dbGetAll(PROFILES_STORE);
+            
+            updateSidebarStats(allProfiles);
+
+            if (!filtered.length) {
+                dom.profilesGrid.innerHTML = `<div class="empty-state">${
+                    searchQuery ? `No matches for "<span class="highlight">${escapeHtml(searchQuery)}</span>"` : 
+                    '✨ No profiles yet. Create one to get started!'
+                }</div>`;
+                return;
+            }
+
+
+            dom.profilesGrid.innerHTML = filtered.map(p => {
+                const isActive = currentProfileId === p.id;
+                const storageIcon = p.storageType === 'cloud' ? '☁️' : p.storageType === 'hybrid' ? '🔄' : '💾';
+                const storageClass = p.storageType === 'cloud' ? 'cloud' : p.storageType === 'hybrid' ? 'success' : 'primary';
+                
+                return `
+                <div class="profile-card ${isActive ? 'active' : ''}" data-id="${p.id}">
+                    <div class="profile-card-header">
+                        <div class="profile-name">
+                            ${isActive ? '⭐ ' : ''}${escapeHtml(p.name)}
+                        </div>
+                        <div class="profile-actions">
+                            <button class="btn btn-sm btn-secondary manage-btn" data-manage="${p.id}" title="Edit">&nbsp;&nbsp;⚙️&nbsp;&nbsp;</button>
+                        </div>
+                    </div>
+                    <div class="profile-meta">
+                        ${p.domain ? `<span class="badge badge-domain">🌐 ${escapeHtml(p.domain)}</span>` : ''}
+                        <span class="badge badge-success">${Compressor.getCookieCount(p.cookieData)} cookies</span>
+                        <span class="badge badge-${storageClass}">${storageIcon} ${p.storageType}</span>
+                        ${(p.tags || []).slice(0, 3).map(t => `<span class="badge badge-primary">#${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Event binding for profile cards
+            dom.profilesGrid.querySelectorAll('.profile-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.manage-btn')) {
+                        applyCookieProfile(card.dataset.id);
+                    }
+                });
+            });
+            
+            dom.profilesGrid.querySelectorAll('.manage-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    let profile = await dbGet(PROFILES_STORE, btn.dataset.manage);
+                    if (!profile && cloudConnected) {
+                        profile = await CloudStorage.getProfile(btn.dataset.manage);
+                    }
+                    if (profile) showProfileFormModal('edit', profile);
+                });
+            });
+        } catch(e) { 
+            console.error('renderProfilesList error:', e);
+            dom.profilesGrid.innerHTML = '<div class="empty-state">Error loading profiles</div>'; 
+        }
     }
 
+
+    async function updateUI() { 
+        await renderProfilesList();
+        updateCloudStatusUI();
+    }
+
+    // ============ PROFILE ACTIONS ============
     async function applyCookieProfile(profileId) {
         try {
-            // Try local first, then cloud
             let profile = await dbGet(PROFILES_STORE, profileId);
             if (!profile && cloudConnected) {
                 profile = await CloudStorage.getProfile(profileId);
@@ -621,15 +581,66 @@
         } catch(e) { showToast('Apply failed', 'error'); return false; }
     }
 
+    async function captureCurrentCookies() {
+        const tabInfo = await getCurrentTabInfo();
+        if (!tabInfo) { showToast('Cannot access tab', 'error'); return null; }
+        try {
+            const cookies = await chrome.cookies.getAll({ domain: tabInfo.domain });
+            const allCookies = await chrome.cookies.getAll({ url: tabInfo.url });
+            const unique = Array.from(new Map([...cookies, ...allCookies].map(c => [c.name + c.domain + c.path, c])).values());
+            const now = Date.now() / 1000;
+            
+            const validCookies = unique.filter(c => !c.expirationDate || c.expirationDate > now).map(c => ({
+                name: c.name, value: c.value, domain: c.domain, path: c.path,
+                secure: c.secure, httpOnly: c.httpOnly, sameSite: c.sameSite, expirationDate: c.expirationDate
+            }));
+            
+            if (validCookies.length === 0) {
+                showToast('No cookies found', 'warning');
+                return null;
+            }
+            
+            const id = 'prof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            const profile = {
+                id,
+                name: `${currentTabDomain}_${new Date().toLocaleString('en', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`,
+                domain: tabInfo.domain,
+                tags: ['auto'],
+                cookieData: Compressor.compress(validCookies),
+                storageType: currentStorageMode,
+                created: Date.now(),
+                updated: Date.now()
+            };
+            
+            await dbPut(PROFILES_STORE, profile);
+            
+            if (cloudConnected && currentStorageMode !== 'local') {
+                await CloudStorage.saveProfile(profile);
+            }
+            
+            currentProfileId = id;
+            await dbPut(SETTINGS_STORE, { key: 'activeProfile', value: id });
+            updateUI();
+            showToast(`Captured ${validCookies.length} cookies`);
+            return profile;
+        } catch(e) { 
+            showToast('Capture failed', 'error'); 
+            return null; 
+        }
+    }
+
     async function clearDomainCookies() {
-        showConfirmModal('Clear Cookies', `Delete ALL cookies for <span class="highlight">${currentTabDomain}</span>?`, '🗑️', async () => {
+        showConfirmModal('Clear Cookies', `Delete ALL cookies for <span class="highlight">${currentTabDomain}</span>?`, async () => {
             try {
                 const cookies = await chrome.cookies.getAll({ domain: currentTabDomain });
                 let deleted = 0;
                 for (const c of cookies) {
                     try {
                         const protocol = c.secure ? 'https://' : 'http://';
-                        await chrome.cookies.remove({ url: `${protocol}${c.domain.replace(/^\./, '')}${c.path}`, name: c.name });
+                        await chrome.cookies.remove({ 
+                            url: `${protocol}${c.domain.replace(/^\./, '')}${c.path}`, 
+                            name: c.name 
+                        });
                         deleted++;
                     } catch(e) {}
                 }
@@ -640,7 +651,7 @@
     }
 
     async function cleanupExpired() {
-        showConfirmModal('Cleanup', 'Remove expired cookies from all profiles?', '🧹', async () => {
+        showConfirmModal('Cleanup', 'Remove expired cookies from all profiles?', async () => {
             try {
                 const profiles = await dbGetAll(PROFILES_STORE);
                 const now = Date.now() / 1000;
@@ -675,6 +686,105 @@
         });
     }
 
+    async function saveProfileFromForm() {
+        const name = dom.profileNameInput.value.trim();
+        const domain = dom.profileDomainInput.value.trim();
+        const tags = dom.profileTagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+        const storageType = dom.profileStorageSelect.value;
+        let cookieData = dom.cookieDataInput.value.trim();
+
+        if (!name) { showToast('Name required', 'warning'); return; }
+        
+        if (cookieData) {
+            if (cookieData.startsWith('[') || cookieData.startsWith('{')) {
+                try { cookieData = JSON.parse(cookieData); } catch(e) { 
+                    showToast('Invalid JSON', 'error'); 
+                    return; 
+                }
+            }
+        } else {
+            cookieData = [];
+        }
+
+        const compressed = Compressor.compress(cookieData);
+
+        try {
+            if (profileFormMode === 'add') {
+                const id = 'prof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                const profile = { 
+                    id, name, 
+                    domain: domain || currentTabDomain, 
+                    tags, 
+                    cookieData: compressed, 
+                    storageType,
+                    created: Date.now(), 
+                    updated: Date.now() 
+                };
+                
+                await dbPut(PROFILES_STORE, profile);
+                
+                if (cloudConnected && storageType !== 'local') {
+                    await CloudStorage.saveProfile(profile);
+                }
+                
+                currentProfileId = id;
+                await dbPut(SETTINGS_STORE, { key: 'activeProfile', value: id });
+                showToast(`Created (${storageType})`);
+            } else if (profileFormMode === 'edit' && editProfileId) {
+                const existing = await dbGet(PROFILES_STORE, editProfileId);
+                if (!existing) { showToast('Not found', 'error'); return; }
+                
+                const updated = { 
+                    ...existing, name, 
+                    domain: domain || existing.domain, 
+                    tags, 
+                    cookieData: compressed, 
+                    storageType,
+                    updated: Date.now() 
+                };
+                
+                await dbPut(PROFILES_STORE, updated);
+                
+                if (cloudConnected && storageType !== 'local') {
+                    await CloudStorage.saveProfile(updated);
+                }
+                
+                if (cloudConnected && storageType === 'local' && existing.storageType !== 'local') {
+                    await CloudStorage.deleteProfile(editProfileId);
+                }
+                
+                showToast('Updated');
+            }
+            hideProfileFormModal();
+            updateUI();
+        } catch(e) { showToast('Save failed', 'error'); }
+    }
+
+    async function deleteProfile(profileId) {
+        const profile = await dbGet(PROFILES_STORE, profileId);
+        if (!profile) return;
+        
+        showConfirmModal('Delete', `Delete "<span class="highlight">${escapeHtml(profile.name)}</span>"?`, async () => {
+            await dbDelete(PROFILES_STORE, profileId);
+            
+            if (cloudConnected && profile.storageType !== 'local') {
+                await CloudStorage.deleteProfile(profileId);
+            }
+            
+            if (currentProfileId === profileId) {
+                const remaining = await dbGetAll(PROFILES_STORE);
+                const newActive = remaining[0]?.id || null;
+                currentProfileId = newActive;
+                await dbPut(SETTINGS_STORE, { key: 'activeProfile', value: newActive });
+            }
+            
+            hideProfileFormModal();
+            updateUI();
+            showToast('Deleted');
+            hideConfirmModal();
+        }, 'Delete', true);
+    }
+
     async function exportProfiles() {
         try {
             const profiles = await getFilteredProfiles();
@@ -687,10 +797,10 @@
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `cookies-${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `cookie-vault-${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             URL.revokeObjectURL(a.href);
-            showToast('Exported');
+            showToast('Exported successfully');
         } catch(e) { showToast('Export failed', 'error'); }
     }
 
@@ -700,7 +810,7 @@
             const data = JSON.parse(text);
             if (!data.profiles?.length) { showToast('Invalid file', 'error'); return; }
             
-            showConfirmModal('Import', `Import <span class="highlight">${data.profiles.length}</span> profiles?`, '📥', async () => {
+            showConfirmModal('Import', `Import <span class="highlight">${data.profiles.length}</span> profiles?`, async () => {
                 let count = 0;
                 for (const p of data.profiles) {
                     const id = p.id || 'prof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
@@ -730,212 +840,114 @@
                 }
                 
                 updateUI();
-                showToast(`Imported ${count}`);
+                showToast(`Imported ${count} profiles`);
                 hideConfirmModal();
             });
         } catch(e) { showToast('Parse failed', 'error'); }
     }
 
-    async function deleteProfile(profileId) {
-        const profile = await dbGet(PROFILES_STORE, profileId);
-        if (!profile) return;
+    // ============ CLOUD FUNCTIONS ============
+    async function connectToFirebase(config) {
+        try {
+            await CloudStorage.initialize(config);
+            firebaseConfig = config;
+            await dbPut(SETTINGS_STORE, { key: 'firebaseConfig', value: config });
+            updateCloudStatusUI();
+            await updateUI();
+            showToast('☁️ Connected to Firebase!', 'success');
+            return true;
+        } catch (error) {
+            showToast('Failed to connect: ' + error.message, 'error');
+            return false;
+        }
+    }
+
+    async function disconnectFirebase() {
+        await CloudStorage.disconnect();
+        firebaseConfig = null;
+        await dbDelete(SETTINGS_STORE, 'firebaseConfig');
+        cloudConnected = false;
+        updateCloudStatusUI();
+        showToast('Disconnected from cloud', 'warning');
+    }
+
+    async function setStorageMode(mode) {
+        if (mode === 'cloud' && !cloudConnected) {
+            showToast('Please configure Firebase first', 'warning');
+            return;
+        }
         
-        showConfirmModal('Delete', `Delete "<span class="highlight">${escapeHtml(profile.name)}</span>"?`, '⚠️', async () => {
-            await dbDelete(PROFILES_STORE, profileId);
-            
-            if (cloudConnected && profile.storageType !== 'local') {
-                await CloudStorage.deleteProfile(profileId);
-            }
-            
-            if (currentProfileId === profileId) {
-                const remaining = await dbGetAll(PROFILES_STORE);
-                const newActive = remaining[0]?.id || null;
-                currentProfileId = newActive;
-                await dbPut(SETTINGS_STORE, { key: 'activeProfile', value: newActive });
-            }
-            
-            hideProfileFormModal();
-            updateUI();
-            showToast('Deleted');
-            hideConfirmModal();
-        }, 'Delete', true);
+        currentStorageMode = mode;
+        settings.storageMode = mode;
+        await dbPut(SETTINGS_STORE, { key: 'main', value: settings });
+        
+        if ((mode === 'cloud' || mode === 'hybrid') && cloudConnected) {
+            await syncToCloud();
+        }
+        
+        updateCloudStatusUI();
+        await updateUI();
     }
 
-    async function saveProfileFromForm() {
-        const name = dom.profileNameInput.value.trim();
-        const domain = dom.profileDomainInput.value.trim();
-        const tags = dom.profileTagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
-        const storageType = dom.profileStorageSelect.value;
-        let cookieData = dom.cookieDataInput.value.trim();
-
-        if (!name) { showToast('Name required', 'warning'); return; }
-        if (cookieData.startsWith('[') || cookieData.startsWith('{')) {
-            try { cookieData = JSON.parse(cookieData); } catch(e) { showToast('Invalid JSON', 'error'); return; }
+    async function syncToCloud() {
+        if (!cloudConnected) {
+            showToast('Not connected to cloud', 'error');
+            return;
         }
 
-        const compressed = Compressor.compress(cookieData);
-
+        dom.syncNowBtn.textContent = '⏳ Syncing...';
+        dom.syncNowBtn.disabled = true;
+        
         try {
-            if (profileFormMode === 'add') {
-                const id = 'prof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                const profile = { 
-                    id, name, 
-                    domain: domain || currentTabDomain, 
-                    tags, 
-                    cookieData: compressed, 
-                    storageType,
-                    created: Date.now(), 
-                    updated: Date.now() 
-                };
-                
-                // Save locally
-                await dbPut(PROFILES_STORE, profile);
-                
-                // Save to cloud if needed
-                if (cloudConnected && storageType !== 'local') {
-                    await CloudStorage.saveProfile(profile);
+            const localProfiles = await dbGetAll(PROFILES_STORE);
+            const cloudProfiles = await CloudStorage.getAllProfiles();
+            
+            let syncedCount = 0;
+            
+            for (const localProfile of localProfiles) {
+                if (localProfile.storageType !== 'local') {
+                    await CloudStorage.saveProfile(localProfile);
+                    syncedCount++;
                 }
-                
-                currentProfileId = id;
-                await dbPut(SETTINGS_STORE, { key: 'activeProfile', value: id });
-                showToast(`Created (${storageType})`);
-            } else if (profileFormMode === 'edit' && editProfileId) {
-                const existing = await dbGet(PROFILES_STORE, editProfileId);
-                if (!existing) { showToast('Not found', 'error'); return; }
-                
-                const updated = { 
-                    ...existing, name, 
-                    domain: domain || existing.domain, 
-                    tags, 
-                    cookieData: compressed, 
-                    storageType,
-                    updated: Date.now() 
-                };
-                
-                await dbPut(PROFILES_STORE, updated);
-                
-                // Update in cloud if needed
-                if (cloudConnected && storageType !== 'local') {
-                    await CloudStorage.saveProfile(updated);
-                }
-                
-                // Remove from cloud if switched to local-only
-                if (cloudConnected && storageType === 'local' && existing.storageType !== 'local') {
-                    await CloudStorage.deleteProfile(editProfileId);
-                }
-                
-                showToast('Updated');
             }
-            hideProfileFormModal();
-            updateUI();
-        } catch(e) { showToast('Save failed', 'error'); }
-    }
-
-    // ============ UI ============
-    function updateSwitchDropdown(profiles) {
-        dom.switchDropdown.innerHTML = '<option value="" disabled>— select —</option>';
-        if (!profiles.length) { 
-            dom.switchDropdown.innerHTML += '<option disabled>📭 None</option>'; 
-            return; 
-        }
-        profiles.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            const storageIcon = p.storageType === 'cloud' ? '☁️' : p.storageType === 'hybrid' ? '🔄' : '💾';
-            opt.textContent = `${storageIcon} ${p.name} (${p.domain || '?'}) [${Compressor.getCookieCount(p.cookieData)}]`;
-            if (currentProfileId === p.id) opt.selected = true;
-            dom.switchDropdown.appendChild(opt);
-        });
-    }
-
-    async function renderProfilesList() {
-        try {
-            const filtered = await getFilteredProfiles();
-            const allProfiles = await dbGetAll(PROFILES_STORE);
-
-            dom.viewTitle.textContent = currentViewMode === 'domain' ? 
-                `📋 ${currentTabDomain || 'Domain'}` : '📋 All Profiles';
-            dom.totalProfilesBadge.textContent = `📦 ${allProfiles.length}`;
-
-            if (!filtered.length) {
-                dom.profilesListContainer.innerHTML = `<div class="empty-message">${
-                    searchQuery ? `No matches for "<span class="highlight">${escapeHtml(searchQuery)}</span>"` : 
-                    '✨ No profiles yet'
-                }</div>`;
-                updateSwitchDropdown([]);
-                dom.activeProfileName.textContent = 'none';
-                return;
+            
+            for (const cloudProfile of cloudProfiles) {
+                const localExists = localProfiles.find(p => p.id === cloudProfile.id);
+                if (!localExists) {
+                    cloudProfile.storageType = cloudProfile.storageType || 'cloud';
+                    await dbPut(PROFILES_STORE, cloudProfile);
+                    syncedCount++;
+                }
             }
-
-            updateSwitchDropdown(filtered);
-
-            dom.profilesListContainer.innerHTML = filtered.map(p => {
-                const isActive = currentProfileId === p.id;
-                const storageIcon = p.storageType === 'cloud' ? '☁️' : p.storageType === 'hybrid' ? '🔄' : '💾';
-                const storageClass = p.storageType === 'cloud' ? 'cloud' : p.storageType === 'hybrid' ? 'synced' : 'local';
-                const storageLabel = p.storageType === 'cloud' ? 'Cloud' : p.storageType === 'hybrid' ? 'Synced' : 'Local';
-                
-                return `
-                <div class="profile-card ${isActive ? 'active-profile' : ''}" data-id="${p.id}">
-                    <div class="profile-info" data-click-id="${p.id}">
-                        <span class="profile-icon">${isActive ? '⭐' : '🍪'}</span>
-                        <div class="profile-details">
-                            <div class="profile-name">
-                                ${escapeHtml(p.name)}
-                                <span class="profile-storage-badge ${storageClass}">${storageIcon} ${storageLabel}</span>
-                            </div>
-                            <div class="profile-meta">
-                                ${p.domain ? `<span class="badge badge-domain">🌐 ${escapeHtml(p.domain)}</span>` : ''}
-                                <span class="badge badge-cookies">${Compressor.getCookieCount(p.cookieData)} cookies</span>
-                                ${(p.tags || []).map(t => `<span class="badge badge-tag">#${escapeHtml(t)}</span>`).join('')}
-                            </div>
-                        </div>
-                    </div>
-                    <button class="manage-btn" data-manage="${p.id}">⚙️</button>
-                </div>`;
-            }).join('');
-
-            dom.activeProfileName.textContent = filtered.find(p => p.id === currentProfileId)?.name || 'none';
-
-            // Event binding
-            dom.profilesListContainer.querySelectorAll('.profile-info').forEach(el => {
-                el.addEventListener('click', () => applyCookieProfile(el.dataset.clickId));
-            });
-            dom.profilesListContainer.querySelectorAll('.manage-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    let profile = await dbGet(PROFILES_STORE, btn.dataset.manage);
-                    if (!profile && cloudConnected) {
-                        profile = await CloudStorage.getProfile(btn.dataset.manage);
-                    }
-                    if (profile) showProfileFormModal('edit', profile);
-                });
-            });
-        } catch(e) { 
-            console.error('renderProfilesList error:', e);
-            dom.profilesListContainer.innerHTML = '<div class="empty-message">Error loading</div>'; 
+            
+            await updateUI();
+            showToast(`Synced ${syncedCount} profiles`, 'success');
+        } catch (error) {
+            showToast('Sync failed: ' + error.message, 'error');
+        } finally {
+            dom.syncNowBtn.textContent = '🔄 Sync Now';
+            dom.syncNowBtn.disabled = false;
         }
     }
 
-    async function updateUI() { 
-        await renderProfilesList();
-        updateCloudUI();
-    }
-
-    function switchView(mode) {
-        currentViewMode = mode;
-        dom.showDomainBtn.classList.toggle('active', mode === 'domain');
-        dom.showGlobalBtn.classList.toggle('active', mode === 'global');
-        updateUI();
-    }
-
-    function escapeHtml(s) { return String(s || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-
-    // ============ EVENTS ============
+    // ============ EVENT BINDING ============
     function bindEvents() {
+        // Panel switching is handled by the inline script in HTML
+        
         // View toggle
-        dom.showDomainBtn.addEventListener('click', () => switchView('domain'));
-        dom.showGlobalBtn.addEventListener('click', () => switchView('global'));
+        dom.showDomainBtn.addEventListener('click', () => {
+            currentViewMode = 'domain';
+            dom.showDomainBtn.classList.add('active');
+            dom.showGlobalBtn.classList.remove('active');
+            updateUI();
+        });
+        
+        dom.showGlobalBtn.addEventListener('click', () => {
+            currentViewMode = 'global';
+            dom.showGlobalBtn.classList.add('active');
+            dom.showDomainBtn.classList.remove('active');
+            updateUI();
+        });
 
         // Search
         let searchTimer;
@@ -947,6 +959,7 @@
                 updateUI();
             }, 300);
         });
+        
         dom.clearSearchBtn.addEventListener('click', () => { 
             dom.searchInput.value = ''; 
             searchQuery = ''; 
@@ -954,46 +967,18 @@
             updateUI(); 
         });
 
-        // Switch & Apply
-        dom.applySwitchBtn.addEventListener('click', () => {
-            const id = dom.switchDropdown.value;
-            id ? applyCookieProfile(id) : showToast('Select a profile', 'warning');
-        });
 
         // Capture
-        dom.captureCurrentBtn.addEventListener('click', async () => {
-            const captured = await captureCurrentCookies();
-            if (captured?.cookies.length) {
-                const id = 'prof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                const profile = {
-                    id, 
-                    name: `${currentTabDomain}_${new Date().toLocaleString('en', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`,
-                    domain: captured.domain, 
-                    tags: ['auto'], 
-                    cookieData: Compressor.compress(captured.cookies),
-                    storageType: currentStorageMode,
-                    created: Date.now(), 
-                    updated: Date.now()
-                };
-                
-                await dbPut(PROFILES_STORE, profile);
-                
-                if (cloudConnected && currentStorageMode !== 'local') {
-                    await CloudStorage.saveProfile(profile);
-                }
-                
-                currentProfileId = id;
-                await dbPut(SETTINGS_STORE, { key: 'activeProfile', value: id });
-                updateUI();
-                showToast(`Captured ${captured.cookies.length} cookies`);
-            } else showToast('No cookies', 'warning');
-        });
-
+        dom.captureCurrentBtn.addEventListener('click', captureCurrentCookies);
+        dom.captureDashboardBtn.addEventListener('click', captureCurrentCookies);
         // Profile management
         dom.addProfileBtn.addEventListener('click', () => showProfileFormModal('add', null, 'local'));
         dom.addCloudProfileBtn.addEventListener('click', () => showProfileFormModal('add', null, 'cloud'));
         dom.clearDomainBtn.addEventListener('click', clearDomainCookies);
         dom.cleanupBtn.addEventListener('click', cleanupExpired);
+        dom.cleanupSettingsBtn.addEventListener('click', cleanupExpired);
+
+        // Import/Export
         dom.exportBtn.addEventListener('click', exportProfiles);
         dom.importBtn.addEventListener('click', () => dom.hiddenFileInput.click());
         dom.hiddenFileInput.addEventListener('change', (e) => {
@@ -1008,9 +993,6 @@
         dom.syncNowBtn.addEventListener('click', syncToCloud);
         
         // Firebase config
-        dom.configureCloudBtn.addEventListener('click', showFirebaseConfigModal);
-        dom.cloudSettingsBtn.addEventListener('click', showFirebaseConfigModal);
-        
         dom.saveFirebaseConfigBtn.addEventListener('click', async () => {
             const config = {
                 apiKey: dom.firebaseApiKey.value.trim(),
@@ -1027,16 +1009,34 @@
                 return;
             }
             
-            hideFirebaseConfigModal();
             await connectToFirebase(config);
         });
         
         dom.clearFirebaseConfigBtn.addEventListener('click', async () => {
             await disconnectFirebase();
-            hideFirebaseConfigModal();
+            dom.firebaseApiKey.value = '';
+            dom.firebaseProjectId.value = '';
+            dom.firebaseAuthDomain.value = '';
+            dom.firebaseDatabaseURL.value = '';
+            dom.firebaseAppId.value = '';
+            dom.firebaseEmail.value = '';
+            dom.firebasePassword.value = '';
         });
 
-        // Form modal
+        // Settings
+        dom.autoReloadCheckbox.addEventListener('change', async (e) => {
+            settings.autoReload = e.target.checked;
+            await dbPut(SETTINGS_STORE, { key: 'main', value: settings });
+            showToast('Setting saved');
+        });
+        
+        dom.compressionCheckbox.addEventListener('change', async (e) => {
+            settings.compressionEnabled = e.target.checked;
+            await dbPut(SETTINGS_STORE, { key: 'main', value: settings });
+            showToast('Setting saved');
+        });
+
+        // Form modal buttons (delegated)
         dom.formModalFooter.addEventListener('click', (e) => {
             if (e.target.id === 'saveProfileBtn') saveProfileFromForm();
             if (e.target.id === 'deleteProfileBtn' && editProfileId) deleteProfile(editProfileId);
@@ -1050,19 +1050,26 @@
             const id = target.dataset.close;
             if (id === 'confirmModal') hideConfirmModal();
             if (id === 'profileFormModal') hideProfileFormModal();
-            if (id === 'firebaseConfigModal') hideFirebaseConfigModal();
         });
 
-        dom.confirmActionBtn.addEventListener('click', () => confirmCallback?.());
-        dom.confirmModal.addEventListener('click', (e) => { if (e.target === dom.confirmModal) hideConfirmModal(); });
-        dom.profileFormModal.addEventListener('click', (e) => { if (e.target === dom.profileFormModal) hideProfileFormModal(); });
-        dom.firebaseConfigModal.addEventListener('click', (e) => { if (e.target === dom.firebaseConfigModal) hideFirebaseConfigModal(); });
+        // Confirm modal
+        dom.confirmActionBtn.addEventListener('click', () => {
+            if (confirmCallback) confirmCallback();
+        });
+        
+        // Close modals on overlay click
+        dom.confirmModal.addEventListener('click', (e) => { 
+            if (e.target === dom.confirmModal) hideConfirmModal(); 
+        });
+        dom.profileFormModal.addEventListener('click', (e) => { 
+            if (e.target === dom.profileFormModal) hideProfileFormModal(); 
+        });
 
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (dom.confirmModal.classList.contains('active')) hideConfirmModal();
                 if (dom.profileFormModal.classList.contains('active')) hideProfileFormModal();
-                if (dom.firebaseConfigModal.classList.contains('active')) hideFirebaseConfigModal();
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 's' && dom.profileFormModal.classList.contains('active')) {
                 e.preventDefault();
@@ -1081,7 +1088,11 @@
             if (activeResult) currentProfileId = activeResult.value;
             
             const settingsResult = await dbGet(SETTINGS_STORE, 'main');
-            if (settingsResult) settings = { ...settings, ...settingsResult.value };
+            if (settingsResult) {
+                settings = { ...settings, ...settingsResult.value };
+                dom.autoReloadCheckbox.checked = settings.autoReload;
+                dom.compressionCheckbox.checked = settings.compressionEnabled;
+            }
             
             currentStorageMode = settings.storageMode || 'local';
             
@@ -1089,6 +1100,14 @@
             const firebaseConfigResult = await dbGet(SETTINGS_STORE, 'firebaseConfig');
             if (firebaseConfigResult) {
                 firebaseConfig = firebaseConfigResult.value;
+                dom.firebaseApiKey.value = firebaseConfig.apiKey || '';
+                dom.firebaseProjectId.value = firebaseConfig.projectId || '';
+                dom.firebaseAuthDomain.value = firebaseConfig.authDomain || '';
+                dom.firebaseDatabaseURL.value = firebaseConfig.databaseURL || '';
+                dom.firebaseAppId.value = firebaseConfig.appId || '';
+                dom.firebaseEmail.value = firebaseConfig.email || '';
+                dom.firebasePassword.value = firebaseConfig.password || '';
+                
                 try {
                     await connectToFirebase(firebaseConfig);
                 } catch (e) {
@@ -1097,11 +1116,11 @@
             }
 
             await getCurrentTabInfo();
-            dom.showDomainBtn.classList.add('active');
-            dom.cloudSettingsSection.classList.add('visible');
-            updateCloudUI();
+            updateCloudStatusUI();
             await updateUI();
             bindEvents();
+            
+            console.log('🍪 Cookie Vault Pro initialized');
         } catch(e) { 
             console.error('Init failed:', e); 
             showToast('Init failed', 'error'); 
