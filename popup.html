@@ -6,44 +6,44 @@
     <title>Ron Cookie Vault Pro</title>
     <style>
         :root {
-            /* Previous color variables remain the same */
-            --bg-primary: #020406;
-            --bg-secondary: #0a0c12;
-            --bg-card: #0c111a;
-            --bg-card-hover: #111722;
-            --bg-card-active: #151f2b;
-            --bg-input: #0E131C;
-            --bg-input-focus: #141c26;
+            /* Modern Dark Theme */
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1a2332;
+            --bg-sidebar: #0d1320;
+            --bg-card: #1a2332;
+            --bg-card-hover: #1f2b3d;
+            --bg-card-active: #243447;
+            --bg-input: #1a2332;
+            --bg-input-focus: #1f2b3d;
             --bg-overlay: rgba(0, 0, 0, 0.85);
-            --bg-modal: #121822;
-            --bg-success: #1e3a2f;
-            --bg-error: #3a1e1e;
-            --bg-warning: #3a351e;
-            --bg-cloud: #1a2a3a;
+            --bg-modal: #1a2332;
+            --bg-success: #064e3b;
+            --bg-error: #450a0a;
+            --bg-warning: #4a3a00;
             
-            --text-primary: #F0F4FA;
-            --text-secondary: #99aec9;
-            --text-muted: #6c7f99;
-            --text-accent: #e6a157;
-            --text-gold: #f5d6a6;
-            --text-cloud: #4fc3f7;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-accent: #60a5fa;
+            --text-success: #34d399;
+            --text-danger: #f87171;
+            --text-warning: #fbbf24;
             
-            --border-primary: rgba(75, 90, 110, 0.5);
-            --border-secondary: #28323e;
-            --border-accent: #e6a157;
-            --border-input: #2C3E4E;
-            --border-cloud: #0288d1;
+            --border-primary: #1e293b;
+            --border-secondary: #334155;
+            --border-accent: #3b82f6;
             
-            --accent: #e6a157;
-            --accent-hover: #f0b44b;
-            --accent-glow: rgba(230, 161, 87, 0.3);
-            --danger: #c24a4a;
-            --success: #4aad6e;
-            --cloud: #4fc3f7;
-            --cloud-hover: #29b6f6;
-            --cloud-glow: rgba(79, 195, 247, 0.3);
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --danger: #ef4444;
+            --success: #10b981;
+            --cloud: #06b6d4;
+            --capture: #f59e0b;
+            --capture-hover: #fbbf24;
             
-            /* Spacing and font size variables remain the same */
+            /* Responsive spacing - clamp for fluid sizing */
             --space-xs: clamp(4px, 0.5vw, 8px);
             --space-sm: clamp(6px, 0.8vw, 10px);
             --space-md: clamp(10px, 1.2vw, 16px);
@@ -55,17 +55,17 @@
             --text-md: clamp(13px, 1.5vw, 15px);
             --text-lg: clamp(15px, 1.8vw, 18px);
             --text-xl: clamp(18px, 2.2vw, 24px);
-            --text-2xl: clamp(24px, 3vw, 32px);
             
-            --radius-sm: clamp(8px, 1vw, 12px);
-            --radius-md: clamp(12px, 1.5vw, 16px);
-            --radius-lg: clamp(16px, 2vw, 20px);
-            --radius-xl: clamp(20px, 2.5vw, 24px);
+            --radius-sm: clamp(6px, 0.8vw, 8px);
+            --radius-md: clamp(8px, 1vw, 12px);
+            --radius-lg: clamp(12px, 1.5vw, 16px);
+            --radius-xl: clamp(16px, 2vw, 24px);
             --radius-full: 9999px;
+            
+            --sidebar-width: 160px;
         }
 
-        /* Reset */
-        *, *::before, *::after {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -83,291 +83,426 @@
             max-width: 100vw;
             min-height: 100vh;
             min-height: 100dvh;
-            background: radial-gradient(circle at 20% 30%, var(--bg-secondary), var(--bg-primary));
+            background: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
-            padding: var(--space-md);
             display: flex;
-            align-items: flex-start;
-            justify-content: center;
+            position: relative;
         }
 
-        /* Scrollbar */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: clamp(4px, 0.5vw, 6px);
             height: clamp(4px, 0.5vw, 6px);
         }
         ::-webkit-scrollbar-track {
-            background: #10161f;
-            border-radius: var(--radius-full);
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: #4b5e72;
+            background: #475569;
             border-radius: var(--radius-full);
         }
 
-        /* Main Container */
-        .vault-container {
-            width: min(100%, 1280px);
-            background: rgba(12, 16, 22, 0.88);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border-primary);
-            box-shadow: 0 30px 45px rgba(0, 0, 0, 0.6);
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-primary);
             display: flex;
             flex-direction: column;
-            gap: 0;
+            transition: transform 0.3s ease, width 0.3s ease, min-width 0.3s ease;
             overflow: hidden;
+            z-index: 200;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            flex-shrink: 0;
         }
 
-        /* HEADER */
-        .vault-header {
+        .sidebar.collapsed {
+            width: 0px;
+            min-width: 0px;
+        }
+
+        .sidebar-header {
             padding: var(--space-lg);
-            border-bottom: 1px solid rgba(70, 85, 105, 0.4);
-            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            min-height: 60px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: var(--text-lg);
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-logo .icon {
+            font-size: clamp(20px, 2.5vw, 28px);
+            flex-shrink: 0;
+        }
+
+        .sidebar-close-mobile {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: var(--space-xs);
+            font-size: var(--text-xl);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-close-mobile:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--space-sm);
             display: flex;
             flex-direction: column;
-            gap: var(--space-sm);
+            gap: var(--space-xs);
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
-        .header-top {
+        .nav-section {
+            margin-bottom: var(--space-sm);
+        }
+
+        .nav-section-title {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: var(--space-sm) var(--space-md);
+            white-space: nowrap;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            font-size: var(--text-sm);
+            font-family: inherit;
+            white-space: nowrap;
+            min-height: 36px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: clamp(16px, 2vw, 20px);
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: var(--space-md);
+            border-top: 1px solid var(--border-primary);
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .sidebar-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+            background: var(--bg-primary);
+        }
+
+        .top-bar {
+            padding: var(--space-sm) var(--space-lg);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: var(--text-sm);
+            flex-wrap: wrap;
+            min-height: 40px;
+            flex-shrink: 0;
+        }
+
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: var(--text-xl);
+            padding: var(--space-xs);
+            transition: all 0.2s;
+            border-radius: var(--radius-sm);
+            width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hamburger-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-dot.disconnected {
+            background: var(--danger);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: var(--space-lg);
+        }
+
+        /* ============ PANELS ============ */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
         }
 
-        .vault-header h1 {
-            font-size: var(--text-2xl);
-            font-weight: 700;
-            background: linear-gradient(135deg, #F2E6D8, #E2BC8C);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-sm);
-            white-space: nowrap;
-        }
-
-        .vault-header h1 .icon {
-            font-size: clamp(24px, 3vw, 32px);
-            -webkit-text-fill-color: #e7bc7e;
-        }
-
-        .version-badge {
-            font-size: var(--text-xs);
-            background: rgba(230, 161, 87, 0.2);
-            color: var(--text-accent);
-            padding: var(--space-xs) var(--space-sm);
-            border-radius: var(--radius-full);
-            white-space: nowrap;
-        }
-
-        .sub {
-            color: var(--text-secondary);
-            font-size: var(--text-sm);
-            border-left: 3px solid var(--accent);
-            padding-left: var(--space-sm);
-            line-height: 1.4;
-        }
-
-        .current-domain-info {
+        .panel-title {
+            font-size: var(--text-xl);
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: var(--space-sm);
-            flex-wrap: wrap;
-            padding: var(--space-sm) var(--space-md);
-            background: rgba(230, 161, 87, 0.1);
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(230, 161, 87, 0.3);
         }
 
-        .domain-label {
-            color: var(--text-secondary);
-            font-size: var(--text-sm);
-            white-space: nowrap;
-        }
-
-        .domain-badge {
-            background: #1e2a34;
-            padding: var(--space-xs) var(--space-md);
-            border-radius: var(--radius-full);
-            font-size: var(--text-sm);
-            color: var(--text-gold);
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .stats-row {
-            display: flex;
-            gap: var(--space-sm);
-            flex-wrap: wrap;
-            margin-left: auto;
-        }
-
-        .stats-badge {
-            background: #1a2533;
-            padding: var(--space-xs) var(--space-sm);
-            border-radius: var(--radius-full);
-            font-size: var(--text-xs);
-            color: var(--text-accent);
-            white-space: nowrap;
-        }
-
-        /* SEARCH */
-        .search-section {
-            padding: var(--space-md) var(--space-lg);
-            display: flex;
-            gap: var(--space-sm);
-            align-items: center;
+        /* Search */
+        .search-bar {
+            margin-bottom: var(--space-lg);
         }
 
         .search-input-wrapper {
-            flex: 1;
             position: relative;
-            min-width: 0;
         }
 
         .search-input {
             width: 100%;
             background: var(--bg-input);
-            border: 1px solid var(--border-input);
-            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border-secondary);
+            padding: var(--space-sm) var(--space-lg);
             padding-right: 40px;
             border-radius: var(--radius-full);
             color: var(--text-primary);
             font-size: var(--text-md);
             outline: none;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .search-input:focus {
             border-color: var(--border-accent);
             background: var(--bg-input-focus);
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
         .search-clear {
             position: absolute;
-            right: var(--space-sm);
+            right: var(--space-md);
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--text-secondary);
             cursor: pointer;
-            font-size: var(--text-lg);
+            font-size: 18px;
             padding: var(--space-xs);
             display: none;
             transition: color 0.2s;
-            line-height: 1;
-        }
-
-        .search-clear:hover {
-            color: var(--accent);
         }
 
         .search-clear.visible {
             display: block;
         }
 
-        /* SWITCHER SECTION */
-        .switcher-section {
-            padding: var(--space-md) var(--space-lg);
-            background: rgba(6, 8, 12, 0.6);
-            border-bottom: 1px solid #232e38;
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-sm);
-            align-items: end;
-        }
-
-        .switcher-group {
-            flex: 2;
-            min-width: 180px;
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-xs);
-        }
-
-        .switcher-group label {
-            font-size: var(--text-xs);
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #c3d1e6;
-            letter-spacing: 0.5px;
-        }
-
-        select {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border-input);
-            padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-full);
+        .search-clear:hover {
             color: var(--text-primary);
-            font-weight: 500;
-            font-size: var(--text-md);
-            cursor: pointer;
-            outline: none;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+            gap: var(--space-md);
+        }
+
+        .profile-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
             transition: all 0.2s;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2399aec9' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 36px;
+            cursor: pointer;
+            position: relative;
         }
 
-        select:hover, select:focus {
-            border-color: var(--border-accent);
-            background-color: var(--bg-input-focus);
+        .profile-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-secondary);
+            transform: translateY(-2px);
         }
 
-        /* ============ SMART BUTTON GROUPS (FLEX-WRAP WITH AUTO-WIDTH) ============ */
-        .btn-group {
+        .profile-card.active {
+            border-color: var(--accent);
+            background: var(--bg-card-active);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .profile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-sm);
+            gap: var(--space-sm);
+        }
+
+        .profile-name {
+            font-weight: 600;
+            font-size: var(--text-md);
+            color: var(--text-primary);
+            word-break: break-word;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: var(--space-xs);
+            flex-shrink: 0;
+        }
+
+        .profile-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--space-sm);
-            align-items: center;
+            gap: var(--space-xs);
+            margin-top: var(--space-sm);
         }
 
-        .btn-group.nowrap {
-            flex-wrap: nowrap;
+        .badge {
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            white-space: nowrap;
         }
 
-        .btn-group.auto-width .btn {
-            width: auto;
-            min-width: max-content;
-            flex: 0 1 auto;
+        .badge-primary {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--text-accent);
         }
 
-        .btn-group.equal-width .btn {
-            flex: 1 1 auto;
-            min-width: max-content;
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--text-success);
         }
 
-        /* ============ BUTTONS ============ */
+        .badge-cloud {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--cloud);
+        }
+
+        .badge-domain {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--text-warning);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: var(--space-xs);
             padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-full);
-            font-weight: 500;
+            border-radius: var(--radius-md);
             font-size: var(--text-sm);
+            font-weight: 500;
             cursor: pointer;
             border: none;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
+            font-family: inherit;
             white-space: nowrap;
             text-decoration: none;
-            line-height: 1.4;
             min-height: clamp(32px, 5vw, 40px);
-            /* KEY: Auto width based on content */
-            width: auto;
             flex-shrink: 0;
         }
 
@@ -375,465 +510,97 @@
             transform: scale(0.96);
         }
 
-        .btn-icon-only {
-            padding: var(--space-sm);
-            min-width: clamp(32px, 5vw, 40px);
-            width: clamp(32px, 5vw, 40px);
-        }
-
-        .btn-switch {
-            background: #1F2A35;
-            color: #F2E5D2;
-            border: 1px solid transparent;
-        }
-
-        .btn-switch:hover {
-            background: var(--accent);
-            color: #0c0f14;
-            box-shadow: 0 0 12px var(--accent-glow);
-            border-color: var(--accent);
-        }
-
-        .btn-capture {
-            background: #2d4a3e;
-            color: #c8f0d2;
-            border: 1px solid transparent;
-        }
-
-        .btn-capture:hover {
-            background: var(--success);
-            color: #0c0f14;
-            box-shadow: 0 0 12px rgba(74, 173, 110, 0.6);
-            border-color: var(--success);
-        }
-
         .btn-primary {
-            background: linear-gradient(100deg, #262c35, #1b212b);
-            border: 1px solid #836e51;
-            color: #fbdfb5;
-            font-weight: 600;
+            background: var(--accent);
+            color: white;
         }
 
         .btn-primary:hover {
-            background: #3f3830;
-            border-color: var(--accent);
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: #3a2e2e;
-            color: #f0cfcf;
-        }
-
-        .btn-danger:hover {
-            background: var(--danger);
-            box-shadow: 0 0 12px rgba(194, 74, 74, 0.4);
-        }
-
-        .btn-cleanup {
-            background: #2d3a2e;
-            color: #c8f0d2;
-        }
-
-        .btn-cleanup:hover {
-            background: #3d5a3e;
-            box-shadow: 0 0 12px rgba(74, 173, 110, 0.3);
-        }
-
-        .btn-outline {
-            background: #1a2533;
-            border: 1px solid #334454;
-            color: #c8d8f0;
-        }
-
-        .btn-outline:hover {
-            background: #2a3a5c;
-            border-color: var(--accent);
-        }
-
-        .btn-confirm {
-            background: var(--accent);
-            color: #141a24;
-            font-weight: 600;
-        }
-
-        .btn-confirm:hover {
             background: var(--accent-hover);
             transform: translateY(-1px);
         }
 
-        .btn-delete {
-            background: #532e38;
-            color: #ffcdd6;
+        .btn-capture {
+            background: var(--capture);
+            color: white;
         }
 
-        .btn-delete:hover {
-            background: #6b3a47;
-        }
-
-        .btn-cancel {
-            background: #242e3a;
-            color: #eef3fc;
-        }
-
-        .btn-cancel:hover {
-            background: #3a4656;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        /* TOGGLE SECTION */
-        .view-toggle-section {
-            padding: var(--space-sm) var(--space-lg);
-            background: rgba(10, 13, 19, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: var(--space-sm);
-            border-bottom: 1px solid #1f2a33;
-        }
-
-        .toggle-buttons {
-            display: flex;
-            gap: var(--space-xs);
-            background: #0c111b;
-            padding: 3px;
-            border-radius: var(--radius-full);
-        }
-
-        .toggle-btn {
-            background: transparent;
-            border: none;
-            padding: var(--space-xs) var(--space-md);
-            border-radius: var(--radius-full);
-            font-size: var(--text-sm);
-            font-weight: 500;
-            cursor: pointer;
-            color: #b8cef0;
-            transition: all 0.2s;
-            white-space: nowrap;
-            width: auto;
-        }
-
-        .toggle-btn.active {
-            background: var(--accent);
-            color: #0f121a;
-            box-shadow: 0 2px 8px var(--accent-glow);
-        }
-
-        .active-profile-display {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            flex-wrap: wrap;
-        }
-
-        .active-label {
-            color: var(--text-secondary);
-            font-size: var(--text-sm);
-        }
-
-        .active-name {
-            color: var(--text-gold);
-            font-size: var(--text-sm);
-            font-weight: 500;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* ACTION BAR */
-        .action-bar {
-            padding: var(--space-md) var(--space-lg);
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-sm);
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        /* PROFILES SECTION */
-        .profiles-section {
-            padding: 0 var(--space-lg) var(--space-md) var(--space-lg);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        .section-title {
-            font-size: var(--text-xs);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #c1d2e8;
-            margin-bottom: var(--space-sm);
-            border-left: 3px solid var(--accent);
-            padding-left: var(--space-sm);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: var(--space-xs);
-        }
-
-        .profiles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-            gap: var(--space-sm);
-            max-height: clamp(180px, 40vh, 500px);
-            overflow-y: auto;
-            padding-right: var(--space-xs);
-            align-content: start;
-        }
-
-        .profile-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-secondary);
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: nowrap;
-            gap: var(--space-sm);
-            padding: var(--space-md);
-            transition: all 0.2s ease;
-            cursor: pointer;
-            min-width: 0;
-        }
-
-        .profile-card:hover {
-            background: var(--bg-card-hover);
-            border-color: #62748b;
+        .btn-capture:hover {
+            background: var(--capture-hover);
             transform: translateY(-1px);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
         }
 
-        .profile-card.active-profile {
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
             border-color: var(--accent);
-            background: var(--bg-card-active);
-            box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        .profile-info {
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--text-danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--text-success);
+        }
+
+        .btn-success:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: var(--space-xs) var(--space-sm);
+            font-size: var(--text-xs);
+            min-height: clamp(28px, 4vw, 32px);
+        }
+
+        .btn-group {
             display: flex;
-            align-items: center;
             gap: var(--space-sm);
-            flex: 1;
-            min-width: 0;
-        }
-
-        .profile-icon {
-            font-size: clamp(20px, 2.5vw, 28px);
-            flex-shrink: 0;
-        }
-
-        .profile-details {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
-            flex: 1;
-        }
-
-        .profile-name {
-            font-weight: 600;
-            font-size: var(--text-md);
-            color: #f2e9de;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .profile-meta {
-            display: flex;
-            gap: var(--space-xs);
-            align-items: center;
             flex-wrap: wrap;
-        }
-
-        .badge {
-            padding: 2px 8px;
-            border-radius: var(--radius-full);
-            font-size: var(--text-xs);
-            white-space: nowrap;
-        }
-
-        .badge-domain {
-            color: var(--text-accent);
-            background: rgba(230, 161, 87, 0.1);
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .badge-cookies {
-            background: var(--bg-success);
-            color: #a3f0c0;
-        }
-
-        .badge-tag {
-            background: #2a3a5c;
-            color: #c8d8f0;
-        }
-
-        .manage-btn {
-            background: #1e2935;
-            border: none;
-            color: #f0cfac;
-            padding: var(--space-xs) var(--space-md);
-            border-radius: var(--radius-full);
-            font-size: var(--text-sm);
-            cursor: pointer;
-            display: inline-flex;
             align-items: center;
-            gap: var(--space-xs);
-            transition: all 0.2s;
-            white-space: nowrap;
-            flex-shrink: 0;
-            width: auto;
-            margin-left: auto;
         }
 
-        .manage-btn:hover {
-            background: var(--accent);
-            color: #0f121a;
+        /* Forms */
+        .form-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
         }
 
-        .empty-message {
-            text-align: center;
-            color: var(--text-muted);
-            font-style: italic;
-            padding: var(--space-xl);
-            grid-column: 1 / -1;
-            font-size: var(--text-sm);
-            line-height: 1.6;
-        }
-
-        /* FOOTER */
-        .footer {
-            font-size: var(--text-xs);
-            text-align: center;
-            padding: var(--space-sm) var(--space-md);
-            color: #4b6279;
-            border-top: 1px solid #18222e;
-            line-height: 1.4;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-            color: var(--accent-hover);
-        }
-        /* MODALS */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-overlay);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-            padding: var(--space-md);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            background: var(--bg-modal);
-            border-radius: var(--radius-xl);
-            border: 1px solid #5e6f83;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-            width: min(95%, 520px);
-            max-height: 90vh;
-            max-height: 90dvh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .modal-overlay.active .modal {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            padding: var(--space-md) var(--space-lg);
-            border-bottom: 1px solid #2f3e4d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: var(--space-sm);
-            flex-shrink: 0;
-        }
-
-        .modal-header h3 {
-            font-size: var(--text-lg);
-            color: #f0dbb4;
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            min-width: 0;
-        }
-
-        .modal-icon {
-            font-size: clamp(20px, 2.5vw, 28px);
-            flex-shrink: 0;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: #8ba0bb;
-            font-size: clamp(24px, 3vw, 28px);
-            cursor: pointer;
-            padding: var(--space-xs);
-            transition: color 0.2s;
-            line-height: 1;
-            flex-shrink: 0;
-            width: auto;
-        }
-
-        .modal-close:hover {
-            color: var(--accent);
-        }
-
-        .modal-body {
-            padding: var(--space-md) var(--space-lg);
-            overflow-y: auto;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .modal-body p {
-            color: #c3d1e6;
+        .form-section-title {
             font-size: var(--text-md);
-            line-height: 1.6;
-            margin-bottom: var(--space-sm);
-            word-break: break-word;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-xs);
             margin-bottom: var(--space-md);
         }
 
         .form-group label {
+            display: block;
             font-size: var(--text-xs);
             font-weight: 600;
-            color: #cbdef5;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xs);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -841,83 +608,65 @@
         .form-group input,
         .form-group textarea,
         .form-group select {
+            width: 100%;
             background: var(--bg-input);
-            border: 1px solid var(--border-input);
+            border: 1px solid var(--border-secondary);
             border-radius: var(--radius-md);
             padding: var(--space-sm) var(--space-md);
             color: var(--text-primary);
             font-family: inherit;
             font-size: var(--text-md);
-            resize: vertical;
+            outline: none;
             transition: all 0.2s;
-            width: 100%;
-        }
-
-        .form-group textarea {
-            min-height: clamp(80px, 15vh, 150px);
         }
 
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
-            outline: none;
             border-color: var(--border-accent);
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: var(--bg-input-focus);
         }
 
-        .modal-footer {
-            padding: var(--space-md) var(--space-lg);
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .checkbox-group {
             display: flex;
-            justify-content: flex-end;
-            gap: var(--space-sm);
             align-items: center;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            border-top: 1px solid #2f3e4d;
+            gap: var(--space-sm);
+            cursor: pointer;
         }
 
-        .modal-footer .btn {
+        .checkbox-group input[type="checkbox"] {
             width: auto;
-            flex-shrink: 0;
+            accent-color: var(--accent);
         }
 
-        /* TOAST */
-        .toast {
-            position: fixed;
-            bottom: var(--space-md);
-            right: var(--space-md);
-            left: var(--space-md);
-            max-width: min(400px, calc(100vw - var(--space-md) * 2));
-            margin-left: auto;
-            background: var(--bg-success);
-            color: #a3f0c0;
-            padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-full);
+        .empty-state {
+            text-align: center;
+            padding: var(--space-xl);
+            color: var(--text-muted);
+            font-size: var(--text-md);
+            grid-column: 1 / -1;
+        }
+
+        .help-text {
+            color: var(--text-muted);
             font-size: var(--text-sm);
-            z-index: 4000;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .toast.error {
-            background: var(--bg-error);
-            color: #f0a3a3;
-        }
-
-        .toast.warning {
-            background: var(--bg-warning);
-            color: #f0daa3;
+            margin-bottom: var(--space-md);
         }
 
         .highlight {
@@ -929,96 +678,187 @@
             display: none !important;
         }
 
-        /* ============ RESPONSIVE BREAKPOINTS ============ */
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: var(--space-lg);
+            right: var(--space-lg);
+            left: var(--space-lg);
+            max-width: min(400px, calc(100vw - var(--space-lg) * 2));
+            margin-left: auto;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            z-index: 4000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            border: 1px solid var(--border-secondary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            pointer-events: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
 
-        /* Extra small: 320-374px */
-        @media (max-width: 374px) {
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-color: var(--text-warning);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: var(--space-md);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-modal);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-secondary);
+            width: min(95%, 500px);
+            max-height: 90vh;
+            max-height: 90dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .modal-body {
+            padding: var(--space-lg);
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: var(--space-md) var(--space-lg);
+            border-top: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        /* Active profile indicator on card */
+        .profile-card.active::before {
+            content: '⭐ Active';
+            position: absolute;
+            top: var(--space-sm);
+            right: var(--space-sm);
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: 500;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        
+        /* Mobile: 320-767px */
+        @media (max-width: 767px) {
             body {
-                padding: var(--space-xs);
-            }
-
-            .vault-header {
-                padding: var(--space-sm);
-            }
-
-            .vault-header h1 {
-                font-size: var(--text-lg);
-            }
-
-            .switcher-section {
-                padding: var(--space-sm);
-            }
-
-            .switcher-group {
-                min-width: 100%;
-            }
-
-            .search-section {
-                padding: var(--space-sm);
-            }
-
-            .view-toggle-section {
-                padding: var(--space-sm);
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .toggle-buttons {
-                width: 100%;
-            }
-
-            .toggle-btn {
-                flex: 1;
-                text-align: center;
-                font-size: var(--text-xs);
-            }
-
-            .action-bar {
-                padding: var(--space-sm);
                 flex-direction: column;
             }
 
-            .action-bar .btn-group {
-                width: 100%;
-                justify-content: center;
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 200px;
+                min-width: 200px;
+                height: 100vh;
+                height: 100dvh;
+                z-index: 300;
+                transform: translateX(-100%);
+                box-shadow: none;
             }
 
-            .profiles-section {
-                padding: 0 var(--space-sm) var(--space-sm) var(--space-sm);
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
             }
 
-            .profiles-grid {
+            .sidebar-close-mobile {
+                display: flex;
+            }
+
+            /* Mobile overlay - only shown when sidebar is open */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: var(--bg-overlay);
+                z-index: 250;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .hamburger-btn {
+                display: flex;
+            }
+
+            .cards-grid {
                 grid-template-columns: 1fr;
-                max-height: 35vh;
+                gap: var(--space-sm);
             }
 
-            .profile-card {
+            .content-body {
+                padding: var(--space-md);
+            }
+
+            .panel-header {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .profile-info {
+            .btn-group {
                 width: 100%;
-            }
-
-            .manage-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .domain-badge {
-                max-width: 120px;
-            }
-
-            .stats-row {
-                margin-left: 0;
-                width: 100%;
-                justify-content: flex-start;
-            }
-
-            .active-profile-display {
-                width: 100%;
-                justify-content: space-between;
             }
 
             .modal {
@@ -1026,384 +866,283 @@
                 max-height: 95vh;
                 max-height: 95dvh;
             }
-
-            .modal-header {
-                padding: var(--space-sm);
-            }
-
-            .modal-body {
-                padding: var(--space-sm);
-            }
-
-            .modal-footer {
-                padding: var(--space-sm);
-            }
-        }
-
-        /* Small phone: 375-479px */
-        @media (min-width: 375px) and (max-width: 479px) {
-            .switcher-group {
-                min-width: 100%;
-            }
-
-            .profiles-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .action-bar {
-                flex-direction: column;
-            }
-        }
-
-        /* Medium: 480-767px */
-        @media (min-width: 480px) and (max-width: 767px) {
-            .profiles-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
         }
 
         /* Tablet: 768-1023px */
         @media (min-width: 768px) and (max-width: 1023px) {
-            .profiles-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            .sidebar {
+                width: 160px;
+                min-width: 160px;
+            }
+
+            .sidebar.collapsed {
+                width: 0px;
+                min-width: 0px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             }
         }
 
         /* Desktop: 1024px+ */
         @media (min-width: 1024px) {
-            .profiles-grid {
-                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-                max-height: 500px;
-            }
-        }
-
-        /* 4K: 2000px+ */
-        @media (min-width: 2000px) {
-            .vault-container {
-                max-width: 1600px;
+            .sidebar {
+                width: var(--sidebar-width);
+                min-width: var(--sidebar-width);
             }
 
-            .profiles-grid {
-                grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-                max-height: 700px;
+            .sidebar.collapsed {
+                width: 0px;
+                min-width: 0px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             }
         }
 
         /* Touch device optimizations */
         @media (hover: none) and (pointer: coarse) {
-            .btn, .profile-card, .toggle-btn, select {
-                min-height: 44px;
-            }
-
-            .manage-btn {
-                min-height: 36px;
-            }
-
-            .search-input {
+            .btn, .nav-item, .profile-card, .search-input, select {
                 min-height: 44px;
             }
         }
 
+        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 transition-duration: 0.01ms !important;
             }
         }
-
-        @media print {
-            .toast, .modal-overlay {
-                display: none !important;
-            }
-
-            body {
-                background: white;
-                color: black;
-            }
-        }
-        /* Add new cloud storage styles */
-        .cloud-settings-section {
-            padding: var(--space-md) var(--space-lg);
-            background: rgba(10, 13, 19, 0.7);
-            border-bottom: 1px solid #1f2a33;
-            display: none;
-        }
-
-        .cloud-settings-section.visible {
-            display: block;
-        }
-
-        .cloud-status {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            padding: var(--space-sm);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-sm);
-        }
-
-        .cloud-status.connected {
-            background: var(--bg-success);
-            border: 1px solid var(--success);
-        }
-
-        .cloud-status.disconnected {
-            background: var(--bg-error);
-            border: 1px solid var(--danger);
-        }
-
-        .cloud-status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .connected .cloud-status-indicator {
-            background: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
-
-        .disconnected .cloud-status-indicator {
-            background: var(--danger);
-            box-shadow: 0 0 8px var(--danger);
-        }
-
-        .storage-mode-selector {
-            display: flex;
-            gap: var(--space-xs);
-            background: #0c111b;
-            padding: 3px;
-            border-radius: var(--radius-full);
-        }
-
-        .storage-mode-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: var(--space-xs) var(--space-md);
-            border-radius: var(--radius-full);
-            font-size: var(--text-sm);
-            font-weight: 500;
-            cursor: pointer;
-            color: #b8cef0;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .storage-mode-btn.active {
-            background: var(--cloud);
-            color: #0f121a;
-            box-shadow: 0 2px 8px var(--cloud-glow);
-        }
-
-        .btn-cloud {
-            background: var(--bg-cloud);
-            color: var(--text-cloud);
-            border: 1px solid var(--border-cloud);
-        }
-
-        .btn-cloud:hover {
-            background: var(--cloud);
-            color: #0f121a;
-            box-shadow: 0 0 12px var(--cloud-glow);
-            border-color: var(--cloud-hover);
-        }
-
-        .btn-sync {
-            background: #1a2a3a;
-            color: #81d4fa;
-            border: 1px solid transparent;
-        }
-
-        .btn-sync:hover {
-            background: #0288d1;
-            color: white;
-            box-shadow: 0 0 12px rgba(2, 136, 209, 0.4);
-        }
-
-        .sync-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: var(--text-xs);
-        }
-
-        .sync-indicator.synced {
-            color: var(--success);
-        }
-
-        .sync-indicator.pending {
-            color: var(--text-accent);
-        }
-
-        .profile-storage-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            padding: 2px 6px;
-            border-radius: var(--radius-full);
-            font-size: var(--text-xs);
-            font-weight: 500;
-        }
-
-        .profile-storage-badge.local {
-            background: rgba(230, 161, 87, 0.1);
-            color: var(--text-accent);
-        }
-
-        .profile-storage-badge.cloud {
-            background: rgba(79, 195, 247, 0.1);
-            color: var(--text-cloud);
-        }
-
-        .profile-storage-badge.synced {
-            background: rgba(74, 173, 110, 0.1);
-            color: var(--success);
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .spinning {
-            animation: spin 1s linear infinite;
-        }
     </style>
 </head>
 <body>
 
-<div class="vault-container">
-    <!-- HEADER -->
-    <div class="vault-header">
-        <div class="header-top">
-            <h1><span class="icon">🍪</span>Cookie Vault</h1>
-            <span class="version-badge">v2.0 Cloud</span>
+<!-- Sidebar Overlay (for mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <span class="icon">🍪</span>
+            <span>Cookie Vault</span>
         </div>
-        <div class="sub">multi‑account · compressed · fast · cloud-ready</div>
-        <div class="current-domain-info">
-            <span class="domain-label">🌐</span>
-            <span class="domain-badge" id="currentDomainBadge">loading...</span>
-            <div class="stats-row">
-                <span class="stats-badge" id="totalProfilesBadge">📦 0</span>
-                <span class="stats-badge" id="cloudSyncBadge" style="display:none;">☁️ Synced</span>
+        <button class="sidebar-close-mobile" id="sidebarCloseMobile" title="Close menu">
+            ✕
+        </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <button class="nav-item active" data-panel="dashboard">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" data-panel="cloud">
+                <span class="nav-icon">☁️</span>
+                <span>Cloud Sync</span>
+            </button>
+            <button class="nav-item" data-panel="tools">
+                <span class="nav-icon">🔧</span>
+                <span>Import/Export</span>
+            </button>
+            <button class="nav-item" data-panel="settings">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </button>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Quick Actions</div>
+            <button class="nav-item" id="captureCurrentBtn">
+                <span class="nav-icon">📸</span>
+                <span>Capture Current</span>
+            </button>
+            <button class="nav-item" id="clearDomainBtn">
+                <span class="nav-icon">🗑️</span>
+                <span>Clear Cookies</span>
+            </button>
+            <button class="nav-item" id="cleanupBtn">
+                <span class="nav-icon">🧹</span>
+                <span>Clean Expired</span>
+            </button>
+        </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+        <div class="sidebar-stats">
+            <div class="sidebar-stat">
+                <span>Profiles</span>
+                <span id="sidebarProfileCount">0</span>
+            </div>
+            <div class="sidebar-stat">
+                <span>Active</span>
+                <span id="sidebarActiveProfile">none</span>
+            </div>
+            <div class="sidebar-stat">
+                <span>Cloud</span>
+                <span id="sidebarCloudStatus">⬤ Off</span>
+            </div>
+            <div class="sidebar-stat">
+                <span>Domain</span>
+                <span id="sidebarDomain" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;">...</span>
             </div>
         </div>
     </div>
+</aside>
 
-    <!-- SEARCH -->
-    <div class="search-section">
-        <div class="search-input-wrapper">
-            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search profiles...">
-            <button class="search-clear" id="clearSearchBtn" title="Clear">✕</button>
-        </div>
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar" id="topBar">
+        <button class="hamburger-btn" id="hamburgerBtn" title="Menu">
+            ☰
+        </button>
+        <span class="status-dot disconnected" id="cloudStatusDot"></span>
+        <span id="cloudStatusText" style="flex:1;min-width:0;">☁️ Not connected</span>
+        <span style="font-size:var(--text-xs);color:var(--text-muted);" id="currentDomainBadge">🌐 loading...</span>
     </div>
 
-    <!-- CLOUD SETTINGS -->
-    <div class="cloud-settings-section" id="cloudSettingsSection">
-        <div class="cloud-status disconnected" id="cloudStatus">
-            <span class="cloud-status-indicator"></span>
-            <span id="cloudStatusText">☁️ Cloud not configured</span>
-            <button class="btn btn-cloud" id="configureCloudBtn" style="margin-left: auto;">⚙️ Configure</button>
+    <!-- Content Body -->
+    <div class="content-body">
+        <!-- Dashboard Panel (renamed from Profiles) -->
+        <div class="panel active" id="dashboardPanel">
+            <div class="panel-header">
+                <div class="panel-title">📊 Dashboard</div>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-secondary active" id="showDomainBtn">🎯 Domain</button>
+                    <button class="btn btn-sm btn-secondary" id="showGlobalBtn">&nbsp;&nbsp;&nbsp;🌍 All&nbsp;&nbsp;&nbsp;</button>
+                    <button class="btn btn-capture" id="captureDashboardBtn">📸 Capture</button>
+                    <button class="btn btn-primary" id="addProfileBtn">✨ Add Local</button>
+                    <button class="btn btn-secondary" id="addCloudProfileBtn">☁️ Add Cloud</button>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search profiles...">
+                    <button class="search-clear" id="clearSearchBtn">✕</button>
+                </div>
+            </div>
+
+            <div class="cards-grid" id="profilesGrid">
+                <div class="empty-state">✨ No profiles yet</div>
+            </div>
         </div>
-        <div class="storage-mode-selector">
-            <button class="storage-mode-btn active" data-mode="local" id="localModeBtn">💾 Local Only</button>
-            <button class="storage-mode-btn" data-mode="cloud" id="cloudModeBtn">☁️ Cloud Only</button>
-            <button class="storage-mode-btn" data-mode="hybrid" id="hybridModeBtn">🔄 Hybrid</button>
+
+        <!-- Cloud Panel -->
+        <div class="panel" id="cloudPanel">
+            <div class="panel-header">
+                <div class="panel-title">☁️ Cloud Sync</div>
+                <button class="btn btn-primary" id="syncNowBtn">🔄 Sync Now</button>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-section-title">Storage Mode</div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary active" data-mode="local" id="localModeBtn">💾 Local Only</button>
+                    <button class="btn btn-secondary" data-mode="cloud" id="cloudModeBtn">☁️ Cloud Only</button>
+                    <button class="btn btn-secondary" data-mode="hybrid" id="hybridModeBtn">🔄 Hybrid</button>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">Firebase Configuration</div>
+                <div class="form-group">
+                    <label>🔑 API Key</label>
+                    <input type="password" id="firebaseApiKey" placeholder="AIzaSy...">
+                </div>
+                <div class="form-group">
+                    <label>📦 Project ID</label>
+                    <input type="text" id="firebaseProjectId" placeholder="my-project">
+                </div>
+                <div class="form-group">
+                    <label>🌐 Auth Domain</label>
+                    <input type="text" id="firebaseAuthDomain" placeholder="my-project.firebaseapp.com">
+                </div>
+                <div class="form-group">
+                    <label>💾 Database URL</label>
+                    <input type="text" id="firebaseDatabaseURL" placeholder="https://my-project.firebaseio.com">
+                </div>
+                <div class="form-group">
+                    <label>📱 App ID</label>
+                    <input type="text" id="firebaseAppId" placeholder="1:123456789:web:abc123">
+                </div>
+                <div class="form-group">
+                    <label>🔐 Email</label>
+                    <input type="email" id="firebaseEmail" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label>🗝️ Password</label>
+                    <input type="password" id="firebasePassword" placeholder="••••••••">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-success" id="saveFirebaseConfigBtn">✓ Connect</button>
+                    <button class="btn btn-danger" id="clearFirebaseConfigBtn">✕ Disconnect</button>
+                </div>
+            </div>
         </div>
-        <div class="btn-group auto-width" style="margin-top: var(--space-sm);">
-            <button class="btn btn-sync" id="syncNowBtn">
-                <span class="sync-indicator">🔄 Sync Now</span>
-            </button>
-            <button class="btn btn-outline" id="cloudSettingsBtn">⚙️ Firebase Config</button>
+
+        <!-- Tools Panel -->
+        <div class="panel" id="toolsPanel">
+            <div class="panel-header">
+                <div class="panel-title">📥 Import / Export</div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-section-title">Export Profiles</div>
+                <p class="help-text">Download your profiles as a JSON file</p>
+                <button class="btn btn-primary" id="exportBtn">📤 Export All</button>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">Import Profiles</div>
+                <p class="help-text">Import from a previously exported JSON file</p>
+                <input type="file" id="hiddenFileInput" accept=".json" class="hidden">
+                <button class="btn btn-secondary" id="importBtn">📥 Select File</button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="panel" id="settingsPanel">
+            <div class="panel-header">
+                <div class="panel-title">⚙️ Settings</div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-section-title">Behavior</div>
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="autoReloadCheckbox" checked>
+                        <span>Auto-reload page after applying cookies</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="compressionCheckbox" checked>
+                        <span>Enable cookie data compression</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">Maintenance</div>
+                <p class="help-text">Remove expired cookies from all profiles</p>
+                <button class="btn btn-danger" id="cleanupSettingsBtn">🧹 Clean Expired Cookies</button>
+            </div>
         </div>
     </div>
+</main>
 
-    <!-- SWITCHER -->
-    <div class="switcher-section">
-        <div class="switcher-group">
-            <label>🔁 Switch & Reload</label>
-            <select id="switchDropdown">
-                <option value="" disabled>— select profile —</option>
-            </select>
-        </div>
-        <div class="btn-group auto-width">
-            <button id="applySwitchBtn" class="btn btn-switch">⟳ Apply</button>
-            <button id="captureCurrentBtn" class="btn btn-capture">📸 Capture</button>
-        </div>
-    </div>
-
-    <!-- TOGGLE -->
-    <div class="view-toggle-section">
-        <div class="toggle-buttons">
-            <button id="showDomainBtn" class="toggle-btn active">🎯 Domain</button>
-            <button id="showGlobalBtn" class="toggle-btn">🌍 All</button>
-        </div>
-        <div class="active-profile-display">
-            <span class="active-label">Active:</span>
-            <span class="active-name" id="activeProfileName">none</span>
-            <span class="active-label" style="margin-left: 8px;">Storage:</span>
-            <span class="active-name" id="activeStorageMode">💾</span>
-        </div>
-    </div>
-
-    <!-- ACTIONS -->
-    <div class="action-bar">
-        <div class="btn-group auto-width">
-            <button id="addProfileBtn" class="btn btn-primary" data-storage="local">✨ Add Local</button>
-            <button id="addCloudProfileBtn" class="btn btn-cloud">☁️ Add Cloud</button>
-            <button id="clearDomainBtn" class="btn btn-danger">🗑️ Clear</button>
-            <button id="cleanupBtn" class="btn btn-cleanup">🧹 Clean</button>
-        </div>
-        <div class="btn-group auto-width">
-            <button id="exportBtn" class="btn btn-outline">📤 Export</button>
-            <button id="importBtn" class="btn btn-outline">📥 Import</button>
-            <input type="file" id="hiddenFileInput" accept=".json" class="hidden">
-        </div>
-    </div>
-
-    <!-- PROFILES -->
-    <div class="profiles-section">
-        <div class="section-title" id="viewTitle">📋 Domain Profiles</div>
-        <div id="profilesListContainer" class="profiles-grid"></div>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="footer">
-        <div>⚡ Built with ❤️ by <strong>Ron</strong></div>
-        <div>
-            🔗 GitHub: 
-            <a href="https://github.com/ron015" target="_blank">
-                Ron015
-            </a>
-        </div>
-        <div>🚀 Cookie Vault Pro • Local + Cloud • Secure • Fast</div>
-    </div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div id="confirmModal" style="z-index: 3005;" class="modal-overlay">
-    <div class="modal">
-        <div class="modal-header">
-            <h3><span class="modal-icon" id="confirmIcon">⚠️</span><span id="confirmTitle">Confirm</span></h3>
-            <button class="modal-close" data-close="confirmModal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p id="confirmMessage">Are you sure?</p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-cancel" data-close="confirmModal">Cancel</button>
-            <button class="btn btn-confirm" id="confirmActionBtn">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<!-- FORM MODAL -->
+<!-- Profile Form Modal -->
 <div id="profileFormModal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <h3><span class="modal-icon">📝</span><span id="formModalTitle">Add Profile</span></h3>
-            <button class="modal-close" data-close="profileFormModal">&times;</button>
+            <h3 id="formModalTitle">Create Profile</h3>
+            <button class="btn btn-sm btn-secondary" data-close="profileFormModal">✕</button>
         </div>
         <div class="modal-body">
             <div class="form-group">
@@ -1415,15 +1154,15 @@
                 <input type="text" id="profileDomainInput" placeholder="*.google.com" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>🏷️ Tags</label>
+                <label>🏷️ Tags (comma separated)</label>
                 <input type="text" id="profileTagsInput" placeholder="work, testing" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>💾 Storage Location</label>
+                <label>💾 Storage</label>
                 <select id="profileStorageSelect">
                     <option value="local">💾 Local Only</option>
                     <option value="cloud">☁️ Cloud Only</option>
-                    <option value="hybrid">🔄 Hybrid (Both)</option>
+                    <option value="hybrid">🔄 Hybrid</option>
                 </select>
             </div>
             <div class="form-group">
@@ -1432,67 +1171,36 @@
             </div>
         </div>
         <div class="modal-footer" id="formModalFooter">
-            <button class="btn btn-confirm" id="saveProfileBtn">Save</button>
+            <button class="btn btn-secondary" data-close="profileFormModal">Cancel</button>
+            <button class="btn btn-primary" id="saveProfileBtn">Save</button>
         </div>
     </div>
 </div>
 
-<!-- FIREBASE CONFIG MODAL -->
-<div id="firebaseConfigModal" class="modal-overlay">
+<!-- Confirm Modal -->
+<div id="confirmModal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <h3><span class="modal-icon">🔥</span>Firebase Configuration</h3>
-            <button class="modal-close" data-close="firebaseConfigModal">&times;</button>
+            <h3 id="confirmTitle">Confirm</h3>
+            <button class="btn btn-sm btn-secondary" data-close="confirmModal">✕</button>
         </div>
         <div class="modal-body">
-            <div class="form-group">
-                <label>🔑 API Key</label>
-                <input type="password" id="firebaseApiKey" placeholder="AIzaSy..." autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>📦 Project ID</label>
-                <input type="text" id="firebaseProjectId" placeholder="my-project" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>🌐 Auth Domain</label>
-                <input type="text" id="firebaseAuthDomain" placeholder="my-project.firebaseapp.com" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>💾 Database URL</label>
-                <input type="text" id="firebaseDatabaseURL" placeholder="https://my-project.firebaseio.com" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>📱 App ID</label>
-                <input type="text" id="firebaseAppId" placeholder="1:123456789:web:abc123" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>🔐 User Email (for auth)</label>
-                <input type="email" id="firebaseEmail" placeholder="user@example.com" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>🗝️ Password</label>
-                <input type="password" id="firebasePassword" placeholder="••••••••" autocomplete="off">
-            </div>
-            <p style="font-size: var(--text-xs); color: var(--text-muted);">
-                ⚠️ Credentials stored locally. Create a Firebase project at console.firebase.google.com
-            </p>
+            <p id="confirmMessage">Are you sure?</p>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-cancel" data-close="firebaseConfigModal">Cancel</button>
-            <button class="btn btn-danger" id="clearFirebaseConfigBtn">Clear Config</button>
-            <button class="btn btn-confirm" id="saveFirebaseConfigBtn">Connect</button>
+            <button class="btn btn-secondary" data-close="confirmModal">Cancel</button>
+            <button class="btn btn-danger" id="confirmActionBtn">Confirm</button>
         </div>
     </div>
 </div>
 
-<!-- TOAST -->
+<!-- Toast -->
 <div id="statusToast" class="toast"></div>
-
-<!-- Firebase SDK -->
 <script src="firebase-app-compat.js"></script>
 <script src="firebase-auth-compat.js"></script>
 <script src="firebase-database-compat.js"></script>
 <script src="lz-string.min.js"></script>
 <script src="popup.js"></script>
+<script src="sidebar.js"></script>
 </body>
 </html>
